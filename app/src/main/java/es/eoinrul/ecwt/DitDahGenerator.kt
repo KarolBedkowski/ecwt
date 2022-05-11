@@ -380,7 +380,7 @@ data class DitDahGeneratorSettings(var context : Context? = null) {
 class DitDahSoundStream {
     interface StreamNotificationListener {
         // We ran out of symbols to add to the stream
-        fun symbolsExhausted(stream : DitDahSoundStream)
+        fun symbolsExhausted(stream : DitDahSoundStream, finished: Boolean)
     }
 
     constructor(config : DitDahGeneratorSettings) {
@@ -452,14 +452,14 @@ class DitDahSoundStream {
         while(true) {
             // Try to get a symbol from the queue:
             var didWait : Boolean = false
-            var sym : SoundTypes? = mSymbolQueue.poll(1, TimeUnit.MILLISECONDS)
+            var sym : SoundTypes? = mSymbolQueue.poll(5, TimeUnit.MILLISECONDS)
 
             if(sym == null) {
                 // We didn't get a symbol quickly enough; this happens during the
                 // interactive sounder mode, where the user is pressing keys or
                 // when we have hit the end of a sequence.
                 // Tell any listener, give them the opportunity to restart or quit:
-                streamNotificationListener?.symbolsExhausted(this)
+                streamNotificationListener?.symbolsExhausted(this, mSymbolQueue.isEmpty())
                 // Now we can wait indefinitely:
                 didWait = true
                 sym = mSymbolQueue.take()
